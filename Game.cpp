@@ -3,10 +3,24 @@
 //
 
 #include "Game.h"
+#include <algorithm>
+#include "Actor.h"
 
 Game::Game() {
     mWindow = nullptr;
     mIsRunning = true;
+
+    // Pong specific
+    mPaddlePos.x = 15.0f;
+    mPaddlePos.y = 500.0f;
+
+    mBallPos.x = 500.0f;
+    mBallPos.y = 500.0f;
+
+    mTicksCount = 0;
+
+    mBallVel.x = -200.0f;
+    mBallVel.y = -235.0f;
 }
 
 bool Game::Initialize() {
@@ -67,6 +81,7 @@ void Game::Shutdown() {
 
 void Game::ProcessInput() {
     SDL_Event event;
+    mPaddleDir = 0;
 
     // While there are still events in the queue
     while (SDL_PollEvent(&event)) {
@@ -74,6 +89,8 @@ void Game::ProcessInput() {
         switch (event.type) {
             case SDL_QUIT:
                 mIsRunning = false;
+                break;
+            default:
                 break;
         }
     }
@@ -85,11 +102,67 @@ void Game::ProcessInput() {
     if (state[SDL_SCANCODE_ESCAPE]) {
         mIsRunning = false;
     }
+
+    // Handle left paddle controls
+    if (state[SDL_SCANCODE_W]) {
+        mPaddleDir += -1;
+    }
+
+    if (state[SDL_SCANCODE_S]) {
+        mPaddleDir += 1;
+    }
 }
 
-void Game::UpdateGame() {}
+void Game::UpdateGame() {
+
+    // Frame limiting
+    while (!SDL_TICKS_PASSED(SDL_GetTicks(), mTicksCount+16));
+
+    // Delta time is the difference in ticks form last
+    // (converted to seconds)
+    float deltaTime = (SDL_GetTicks() - mTicksCount)/1000.0f;
+
+    // Update tick count for next frame
+    mTicksCount = SDL_GetTicks();
+
+    if (deltaTime > 0.05f) {
+        deltaTime = 0.05f;
+    }
+
+    // Update all actors
+    mUpdatingActors = true;
+
+    for (auto actor : mActors) {
+        actor->Update(deltaTime);
+    }
+
+    mUpdatingActors = false;
+
+    // Move any pending actors to mActors
+    for (auto pending : mPendingActors) {
+        mActors.emplace_back(pending);
+    }
+    mPendingActors.clear();
+
+    // Add any dead actors to a temp vector
+    std::vector<Actor*>deadActors;
+    for (auto actor : mActors) {
+        if (actor->GetState() == Actor::State::EDead) {
+            deadActors.emplace_back(actor);
+        }
+    }
+
+    // Delete dead actors (which removes them from mActors)
+    for (auto actor : deadActors) {
+        delete actor;
+    }
+
+}
 
 void Game::GenerateOutput() {
+
+    const int thickness = 15;
+
     SDL_SetRenderDrawColor(
             mRenderer,
             0,  // R
@@ -97,9 +170,58 @@ void Game::GenerateOutput() {
             255,    // B
             255     // A
             );
+
     SDL_RenderClear(mRenderer);
 
     // Draw game scene here..
+    SDL_SetRenderDrawColor(mRenderer, 255, 255, 255, 255);
+    SDL_Rect paddle {
+            static_cast<int>(mPaddlePos.x - thickness/2),
+            static_cast<int>(mPaddlePos.y - thickness/2),
+            thickness,
+            150
+    };
+
+    SDL_RenderFillRect(mRenderer, &paddle);
+
+    SDL_Rect ball {
+            static_cast<int>(mBallPos.x - thickness/2),
+            static_cast<int>(mBallPos.y - thickness/2),
+            thickness,
+            thickness
+    };
+
+    SDL_RenderFillRect(mRenderer, &ball);
 
     SDL_RenderPresent(mRenderer);
+}
+
+void Game::AddActor(Actor *actor) {
+    // If updating actors, need to add to pending
+    if (mUpdatingActors) {
+        mPendingActors.emplace_back(actor);
+    }
+    else {
+        mActors.emplace_back(actor);
+    }
+}
+
+void Game::RemoveActor(Actor *actor) {
+    // Is it pending actors?
+    auto iter = std::find(mPendingActors.begin(), mPendingActors.end(), actor);
+
+    if (iter != mPendingActors.end()) {
+        // Swap to end of vector and pop off (avoid erase copies)
+        std::iter_swap(iter, mPendingActors.end()-1);
+        mPendingActors.pop_back();
+    }
+
+    // Is it in actors?
+    iter = std::find(mActors.begin(), mActors.end(), actor);
+
+    if (iter != mActors.end()) {
+        std::iter_swap(iter, mActors.end()-1);
+        mActors.pop_back();
+    }
+
 }
