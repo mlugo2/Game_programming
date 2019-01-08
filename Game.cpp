@@ -2,8 +2,8 @@
 // Created by marco on 12/30/18.
 //
 
-#include "Game.h"
 #include <algorithm>
+#include "Game.h"
 #include "Actor.h"
 
 Game::Game() {
@@ -32,6 +32,23 @@ bool Game::Initialize() {
         return false;
     }
 
+    // Use the core OpenGL profile
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,
+                        SDL_GL_CONTEXT_PROFILE_CORE);
+
+    // Specify version 3.3
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+    // Request a color buffer with 8-bits per RGBA channel
+    SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
+    // Enable double buffering
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+    // Force OpenGL to use hardware acceleration
+    SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
+
     // We have succeeded, let's created a window
     mWindow = SDL_CreateWindow(
             "Game Programming in C++",
@@ -39,7 +56,7 @@ bool Game::Initialize() {
             100,
             1024,
             768,
-            0
+            SDL_WINDOW_OPENGL
             );
 
     // Let's see if the window was created..
@@ -48,18 +65,26 @@ bool Game::Initialize() {
         return false;
     }
 
-    // Ok ok, we got a window, now we need to render inside it
-    mRenderer = SDL_CreateRenderer(
-            mWindow,    // Window to create renderer for
-            -1,         // Usually -1
-            SDL_RENDERER_ACCELERATED|SDL_RENDERER_PRESENTVSYNC
-            );
+    mContext = SDL_GL_CreateContext(mWindow);
 
-    // Let's check this too!
-    if (!mRenderer) {
-        SDL_Log("Failed to create renderer: %s", SDL_GetError());
+    // Initialize GLEW
+    glewExperimental = GL_TRUE;
+
+    if (glewInit() != GLEW_OK) {
+        SDL_Log("Failed to initialize GLEW.");
         return false;
     }
+
+    // On some platforms, GLEW will emit a benign error code
+    // so clear it.
+    glGetError();
+
+    if (IMG_Init(IMG_INIT_PNG) == 0) {
+        SDL_Log("Unable to initialize SDL_image: %s", SDL_GetError());
+        return false;
+    }
+
+    LoadData();
 
     // Let the game begin :)
     return true;
@@ -74,7 +99,7 @@ void Game::RunLoop() {
 }
 
 void Game::Shutdown() {
-    SDL_DestroyRenderer(mRenderer);
+    SDL_GL_DeleteContext(mContext);
     SDL_DestroyWindow(mWindow);
     SDL_Quit();
 }
@@ -161,39 +186,23 @@ void Game::UpdateGame() {
 
 void Game::GenerateOutput() {
 
-    const int thickness = 15;
+    // Set the clear color to gray
+    glClearColor(0.86f, 0.86f, 0.86f, 1.0f);
+    // Clear the color buffer
+    glClear(GL_COLOR_BUFFER_BIT);
 
-    SDL_SetRenderDrawColor(
-            mRenderer,
-            0,  // R
-            0,  // G
-            255,    // B
-            255     // A
-            );
+    // todo Draw game scene here..
 
-    SDL_RenderClear(mRenderer);
+    // Swap the buffers, which also displays the scene
+    SDL_GL_SwapWindow(mWindow);
+}
 
-    // Draw game scene here..
-    SDL_SetRenderDrawColor(mRenderer, 255, 255, 255, 255);
-    SDL_Rect paddle {
-            static_cast<int>(mPaddlePos.x - thickness/2),
-            static_cast<int>(mPaddlePos.y - thickness/2),
-            thickness,
-            150
-    };
+void Game::LoadData() {
 
-    SDL_RenderFillRect(mRenderer, &paddle);
+}
 
-    SDL_Rect ball {
-            static_cast<int>(mBallPos.x - thickness/2),
-            static_cast<int>(mBallPos.y - thickness/2),
-            thickness,
-            thickness
-    };
+void Game::UnloadData() {
 
-    SDL_RenderFillRect(mRenderer, &ball);
-
-    SDL_RenderPresent(mRenderer);
 }
 
 void Game::AddActor(Actor *actor) {

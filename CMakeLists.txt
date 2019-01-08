@@ -3,12 +3,15 @@ project(Game_programming)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(Game_programming main.cpp Game.cpp Game.h Actor.cpp Actor.h Math.h Component.cpp Component.h)
+add_executable(Game_programming main.cpp Game.cpp Game.h Actor.cpp Actor.h Math.h Component.cpp Component.h Math.cpp)
 
 INCLUDE(FindPkgConfig)
 
 PKG_SEARCH_MODULE(SDL2 REQUIRED sdl2)
-#PKG_SEARCH_MODULE(SDL2IMAGE REQUIRED SDL2_image>=2.0.0)
+PKG_SEARCH_MODULE(SDL2IMAGE REQUIRED SDL2_image>=2.0.0)
 
-INCLUDE_DIRECTORIES(${SDL2_INCLUDE_DIRS})
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} ${SDL2_LIBRARIES})
+find_package(GLEW 2.1 REQUIRED)
+include_directories($(GLEW_INCLUDE_DIRS))
+
+INCLUDE_DIRECTORIES(${SDL2_INCLUDE_DIRS} ${SDL2IMAGE_INCLUDE_DIRS})
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} ${SDL2_LIBRARIES} ${SDL2IMAGE_LIBRARIES} GLU GL GLEW)

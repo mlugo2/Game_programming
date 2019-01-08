@@ -7,6 +7,8 @@
 
 #include <iostream>
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
+#include <GL/glew.h>
 #include "Math.h"
 #include "Actor.h"
 
@@ -31,12 +33,14 @@ private:
     void ProcessInput();
     void UpdateGame();
     void GenerateOutput();
+    void LoadData();
+    void UnloadData();
 
     // Window created by SDL
     SDL_Window* mWindow;
 
-    // SDL Renderer
-    SDL_Renderer* mRenderer;
+    // SDL GLContext
+    SDL_GLContext mContext;
 
     Uint32 mTicksCount;
 
