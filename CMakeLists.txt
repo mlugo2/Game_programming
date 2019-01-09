@@ -3,7 +3,7 @@ project(Game_programming)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(Game_programming main.cpp Game.cpp Game.h Actor.cpp Actor.h Math.h Component.cpp Component.h Math.cpp)
+add_executable(Game_programming main.cpp Game.cpp Game.h Actor.cpp Actor.h Math.h Component.cpp Component.h Math.cpp VertexArray.cpp VertexArray.h Shader.cpp Shader.h)
 
 INCLUDE(FindPkgConfig)
 

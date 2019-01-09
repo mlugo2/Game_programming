@@ -44,7 +44,6 @@ private:
 
     Uint32 mTicksCount;
 
-
     // Game should continue to run
     bool mIsRunning;
     bool mUpdatingActors;
