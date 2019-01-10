@@ -5,6 +5,8 @@
 #ifndef GAME_PROGRAMMING_COMPONENT_H
 #define GAME_PROGRAMMING_COMPONENT_H
 
+#include <cstdint>
+
 class Component {
 public:
     // Constructor
@@ -14,6 +16,10 @@ public:
     virtual ~Component();
     // Update this component by delta time
     virtual void Update(float deltaTime);
+    // Process input for this component
+    virtual void ProcessInput(const uint8_t* keystate) {}
+    // Called when world transform changes
+    virtual void OnUpdateWorldTransform() {}
 
     int GetUpdateOrder() const { return mUpdateOrder; }
 

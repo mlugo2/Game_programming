@@ -9,9 +9,9 @@
 
 Actor::Actor(Game *game)
         :mState(State::EActive)
-        ,mPosition()
+        ,mPosition(Vector3::Zero)
+        ,mRotation(Quaternion::Identity)
         ,mScale(1.0f)
-        ,mRotation(0.0f)
         ,mGame(game)
 {
     mGame->AddActor(this);

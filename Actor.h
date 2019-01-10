@@ -28,12 +28,14 @@ public:
     virtual void UpdateActor(float deltaTime);
 
     // Getters/setters
-    const Vector2& GetPosition() const { return mPosition; }
-    void SetPosition(const Vector2& pos) { mPosition = pos; }
+    const Vector3& GetPosition() const { return mPosition; }
+    void SetPosition(const Vector3& pos) { mPosition = pos; }
     float GetScale() const { return mScale; }
     void SetScale(const float scale) { mScale = scale; }
-    float GetRotation() const { return mRotation; }
-    void SetRotation(const float rotaion) { mRotation = rotaion; }
+    Quaternion GetRotation() const { return mRotation; }
+    void SetRotation(const Quaternion rotation) { mRotation = rotation; }
+
+    Vector3 GetForward() const { return Vector3::Transform(Vector3::UnitX, mRotation); }
 
     State GetState() const { return mState; }
     void SetState(const State state) { mState = state; }
@@ -48,9 +50,9 @@ private:
     State mState;
 
     // Transform
-    Vector2 mPosition;
+    Vector3 mPosition;
+    Quaternion mRotation;
     float mScale;
-    float mRotation;
 
     std::vector<class Component*> mComponents;
     class Game* mGame;
